@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Demo Bar Queue</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src='https://cdn.firebase.com/js/client/1.0.11/firebase.js'></script>
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+	<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Raleway:400,300,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Oleo+Script' rel='stylesheet' type='text/css'>
+	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="http://bootswatch.com/simplex/bootstrap.min.css">
+	 
+	<script>
+		$( document ).ready(function() {
+			var myDataRef = new Firebase('https://popping-fire-1382.firebaseio.com/');
+			$('#submitData').click(function(){
+				var name = $('#nameInput').val();
+		        var phone = $('#phoneInput').val();
+		        var drink = $('#drinkInput').val();
+		        var quantity = $('#quantityInput').val();
+		        myDataRef.push({name: name, phone: phone, drink: drink, quantity: quantity});
+		        $('#nameInput').val('');
+		        $('#phoneInput').val('');
+		        $('#drinkInput').val('');
+		        $('#quantityInput').val('');
+			});
+			myDataRef.on('child_added', function(snapshot) {
+		        var userData = snapshot.val();
+		        var tableID = snapshot.name();
+		     //   alert(userData.name);
+		        addRow(tableID, userData.name, userData.phone, userData.drink, userData.quantity);
+		    });
+
+		    myDataRef.on('child_removed', function(snapshot) {
+		        var tableID = snapshot.name();
+		     //   alert(userData.name);
+		        removeRow(tableID);
+		    });
+
+			function addRow(tableID, name, phone, drink, quantity) {
+				var newRow = "<tr id="+tableID+"><td>"+name+"</td><td>"+phone+"</td><td>"+drink+"</td><td>"+quantity+"</td><td><button class='deleteRow btn btn-primary btn-xs buttonExtra'>Done</button></td></tr>";
+		        $('#CustomerTable > tbody:last').append(newRow);
+		    };
+
+		    function removeRow(tableID, name, phone, drink, quantity) {
+		        $('#'+tableID).remove();
+		    };
+
+		    $("#CustomerTable tbody").on('click', 'td button.deleteRow', function(){
+			   var tableID = $(this).closest('tr').attr('id');
+			   var name = $("#" + tableID + " td:first-child").text();
+			   var phoneNumber = $("#" + tableID + " td:nth-child(2)").text();
+			   var drink = $("#" + tableID + " td:nth-child(3)").text();
+			   var quantity = $("#" + tableID + " td:nth-child(4)").text();
+			   $.post( "/sendText", { name: name, drink: drink, phoneNumber: phoneNumber, quantity: quantity});
+			   myDataRef.child(tableID).remove();
+			});
+		});
+	</script>
+	<style>
+		body{
+			justify-content: center;
+			text-align: center;
+			height: 100%;
+		}
+		#CustomerTable th, tr, td{
+			justify-content: center;
+			text-align: center;
+			vertical-align: middle;
+		}
+		h1{
+			font-family: 'Oleo Script', cursive;
+		}
+		.businessImg{
+			border-radius: 10px;
+		}
+		#footer {
+		   position:fixed;
+		   left:0px;
+		   bottom:0px;
+		   height: 50px;
+		   width:100%;
+		   font-size: 30px;
+		   font-family: "Lato";
+		   background-color: #f5f5f5;
+		}
+	</style>
+</head>
+<body>
+	<div class="navbar navbar-inverse">
+			<h1 style="color: white">Murphy's Pub</h1>
+	</div>
+	<!-- Wrapper-->
+	<div style="width: 100%;">
+		<!-- USER LIST-->
+		<div style="display: none">
+			<input type='text' id='nameInput' placeholder='Name'>
+    		<input type='text' id='phoneInput' placeholder='Phone Number'>
+    		<input type='text' id='drinkInput' placeholder='Drink Name'>
+    		<input type='number' id='quantityInput' placeholder='Quantity'>
+    		<button id="submitData">Submit</button>
+		</div>
+		<br />
+		<div class="container">
+			<div style="width: 60%; float: left;">
+				<table class="table table-hover table-bordered" id="CustomerTable">
+					<thead>
+						<th>Name</th>
+						<th>Phone</th>
+						<th>Drink</th>
+						<th>Quantity</th>
+						<th>Finished?</th>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div><!-- /USER LIST-->
+			<img class="businessImg" src="{{ url_for('static', filename='img/murphys.jpg') }}" style="width: 35%; float: right; border: 0px;" /> 
+		</div>
+	</div><!-- /WRAPPER-->
+	<div id="footer">
+		<p class="text-muted">Developed by Fizz</p>
+	</div>
+</body>
+</html>
